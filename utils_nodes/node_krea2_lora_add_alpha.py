@@ -9,7 +9,7 @@ import folder_paths
 
 
 class Krea2LoraAddAlphaNode:
-    """Thêm key `.alpha` còn thiếu vào LoRA Krea2.
+    """Thêm key `.alpha` còn thiếu vào LoRA.
 
     Giá trị alpha bằng rank của tensor LoRA A/down tương ứng, đồng
     thời kế thừa dtype và device của tensor đó.
@@ -41,19 +41,19 @@ class Krea2LoraAddAlphaNode:
     ):
         lora_path = folder_paths.get_full_path("loras", lora_file)
         if not lora_path:
-            print(f"[Krea2 Add Alpha] Không tìm thấy LoRA: {lora_file}")
+            print(f"[Add Alpha] Không tìm thấy LoRA: {lora_file}")
             return ()
 
-        print(f"[Krea2 Add Alpha] Đang xử lý: {lora_path}")
+        print(f"[Add Alpha] Đang xử lý: {lora_path}")
 
         try:
             lora_data, metadata = self._load_lora(lora_path)
         except Exception as exc:
-            print(f"[Krea2 Add Alpha] Đọc file thất bại: {exc}")
+            print(f"[Add Alpha] Đọc file thất bại: {exc}")
             return ()
 
         if not lora_data:
-            print("[Krea2 Add Alpha] File không chứa tensor hợp lệ.")
+            print("[Add Alpha] File không chứa tensor hợp lệ.")
             return ()
 
         converted_data, added, overwritten, skipped = self._add_alpha_keys(
@@ -87,14 +87,14 @@ class Krea2LoraAddAlphaNode:
                     os.remove(temp_path)
                 except OSError:
                     pass
-            print(f"[Krea2 Add Alpha] Lưu file thất bại: {exc}")
+            print(f"[Add Alpha] Lưu file thất bại: {exc}")
             return ()
 
         print(
-            "[Krea2 Add Alpha] Hoàn tất: "
+            "[Add Alpha] Hoàn tất: "
             f"thêm {added}, ghi đè {overwritten}, giữ nguyên {skipped} alpha."
         )
-        print(f"[Krea2 Add Alpha] File đã lưu tại: {output_path}")
+        print(f"[Add Alpha] File đã lưu tại: {output_path}")
         return ()
 
     def _load_lora(
@@ -153,7 +153,7 @@ class Krea2LoraAddAlphaNode:
 
             if weight.ndim < 1 or weight.shape[0] <= 0:
                 print(
-                    "[Krea2 Add Alpha] Bỏ qua tensor không xác định được rank: "
+                    "[Add Alpha] Bỏ qua tensor không xác định được rank: "
                     f"{key}"
                 )
                 continue
@@ -163,7 +163,7 @@ class Krea2LoraAddAlphaNode:
 
             if previous is not None and previous[0] != rank:
                 print(
-                    f"[Krea2 Add Alpha] Cảnh báo: {base_key} có nhiều rank "
+                    f"[Add Alpha] Cảnh báo: {base_key} có nhiều rank "
                     f"({previous[0]} và {rank}); giữ rank đầu tiên."
                 )
                 continue
@@ -218,5 +218,5 @@ NODE_CLASS_MAPPINGS = {
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "Krea2LoraAddAlphaNode": "Krea2 LoRA Add Alpha",
+    "Krea2LoraAddAlphaNode": "LoRA Add Alpha",
 }
