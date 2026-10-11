@@ -8,7 +8,7 @@ import safetensors.torch
 import folder_paths
 
 
-class Krea2LoraAddAlphaNode:
+class LoraAddAlphaNode:
     """Thêm key `.alpha` còn thiếu vào LoRA.
 
     Giá trị alpha bằng rank của tensor LoRA A/down tương ứng, đồng
@@ -214,9 +214,9 @@ class Krea2LoraAddAlphaNode:
 
 
 NODE_CLASS_MAPPINGS = {
-    "Krea2LoraAddAlphaNode": Krea2LoraAddAlphaNode,
+    "LoraAddAlphaNode": LoraAddAlphaNode,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "Krea2LoraAddAlphaNode": "LoRA Add Alpha",
+    "LoraAddAlphaNode": "LoRA Add Alpha",
 }
