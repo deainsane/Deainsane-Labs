@@ -15,8 +15,8 @@ class DeainsaneTextEncodeQwenImage21(io.ComfyNode):
     @classmethod
     def define_schema(cls):
         return io.Schema(
-            node_id="TextEncodeQwenImage21",
-            display_name="Text Encode Qwen Image 2.1",
+            node_id="DeainsaneTextEncodeQwenImage21",
+            display_name="Text Encode Qwen Image 2.1 🐺",
             category="model/conditioning/qwen image",
             inputs=[
                 io.Clip.Input("clip"),
@@ -28,7 +28,7 @@ class DeainsaneTextEncodeQwenImage21(io.ComfyNode):
                     default=1024,
                     min=0,
                     max=4096,
-                    step=32,
+                    step=8,
                     tooltip="Reference images are resized to about resolution x resolution pixels, at multiples of 'round_to_multiple', preserving aspect ratio. 0 keeps each reference at its own size, rounded to a multiple.",
                 ),
                 io.Combo.Input(
@@ -171,5 +171,5 @@ NODE_CLASS_MAPPINGS = {
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "DeainsaneTextEncodeQwenImage21": "Deainsane Text Encode Qwen Image 2.1 🐺",
+    "DeainsaneTextEncodeQwenImage21": "Text Encode Qwen Image 2.1 🐺",
 }

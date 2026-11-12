@@ -80,5 +80,5 @@ NODE_CLASS_MAPPINGS = {
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "DeainsaneModelSave": "Deainsane Model Save 🐺",
+    "DeainsaneModelSave": "Model Save 🐺",
 }
