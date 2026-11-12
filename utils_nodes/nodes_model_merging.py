@@ -7,7 +7,7 @@ import comfy.model_sampling
 import folder_paths
 
 
-class ModelSave:
+class DeainsaneModelSave:
     """Save a ComfyUI model without writing safetensors metadata."""
 
     SEARCH_ALIASES = ["save model", "export model"]
@@ -76,9 +76,9 @@ class ModelSave:
 
 
 NODE_CLASS_MAPPINGS = {
-    "ModelSave": ModelSave,
+    "DeainsaneModelSave": DeainsaneModelSave,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "ModelSave": "Model Save 🐺",
+    "DeainsaneModelSave": "Model Save 🐺",
 }

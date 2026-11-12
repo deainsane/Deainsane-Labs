@@ -6,7 +6,7 @@ import comfy.model_management
 import node_helpers
 
 
-class TextEncodeQwenImage21:
+class DeainsaneTextEncodeQwenImage21:
     """Text Encode Qwen Image 2.1 with reference image resizing and output."""
 
     SEARCH_ALIASES = ["text encode qwen image 2.1", "qwen image encode"]
@@ -166,9 +166,9 @@ class TextEncodeQwenImage21:
 
 
 NODE_CLASS_MAPPINGS = {
-    "TextEncodeQwenImage21": TextEncodeQwenImage21,
+    "DeainsaneTextEncodeQwenImage21": DeainsaneTextEncodeQwenImage21,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "TextEncodeQwenImage21": "Text Encode Qwen Image 2.1 🐺",
+    "DeainsaneTextEncodeQwenImage21": "Text Encode Qwen Image 2.1 🐺",
 }
