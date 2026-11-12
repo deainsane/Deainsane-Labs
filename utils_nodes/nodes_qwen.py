@@ -4,87 +4,84 @@ import torch
 import comfy.utils
 import comfy.model_management
 import node_helpers
+from comfy_api.latest import io
 
 
-class DeainsaneTextEncodeQwenImage21:
+class DeainsaneTextEncodeQwenImage21(io.ComfyNode):
     """Text Encode Qwen Image 2.1 with reference image resizing and output."""
 
     SEARCH_ALIASES = ["text encode qwen image 2.1", "qwen image encode"]
 
     @classmethod
-    def INPUT_TYPES(cls):
-        optional_inputs = {
-            "vae": ("VAE",),
-            "resolution": (
-                "INT",
-                {
-                    "default": 1024,
-                    "min": 0,
-                    "max": 4096,
-                    "step": 8,
-                    "tooltip": "Reference images are resized to about resolution x resolution pixels, at multiples of 'round_to_multiple', preserving aspect ratio. 0 keeps each reference at its own size, rounded to a multiple.",
-                },
-            ),
-            "round_to_multiple": (      
-                [8, 16, 32, 64, 128],
-                {
-                    "default": 64,
-                    "tooltip": "Round resized image dimensions to multiples of this value.",
-                },
-            ),
-        }
-
-        # Tương đương với Autogrow từ image_1 đến image_16
-        for i in range(1, 17):
-            optional_inputs[f"image_{i}"] = (
-                "IMAGE",
-                {
-                    "tooltip": "Reference images, seen by the text encoder and spliced into the sequence as VAE latents."
-                },
-            )
-
-        return {
-            "required": {
-                "clip": ("CLIP",),
-                "prompt": (
-                    "STRING",
-                    {"multiline": True, "dynamicPrompts": True},
+    def define_schema(cls):
+        return io.Schema(
+            node_id="TextEncodeQwenImage21",
+            display_name="Text Encode Qwen Image 2.1",
+            category="model/conditioning/qwen image",
+            inputs=[
+                io.Clip.Input("clip"),
+                io.String.Input("prompt", multiline=True, dynamic_prompts=True),
+                io.String.Input("negative_prompt", multiline=True, dynamic_prompts=True),
+                io.Vae.Input("vae", optional=True),
+                io.Int.Input(
+                    "resolution",
+                    default=1024,
+                    min=0,
+                    max=4096,
+                    step=32,
+                    tooltip="Reference images are resized to about resolution x resolution pixels, at multiples of 'round_to_multiple', preserving aspect ratio. 0 keeps each reference at its own size, rounded to a multiple.",
                 ),
-                "negative_prompt": (
-                    "STRING",
-                    {"multiline": True, "dynamicPrompts": True},
+                io.Combo.Input(
+                    "round_to_multiple",
+                    options=[8, 16, 32, 64, 128],
+                    default=64,
+                    tooltip="Round resized image dimensions to multiples of this value.",
                 ),
-            },
-            "optional": optional_inputs,
-        }
+                io.Autogrow.Input(
+                    "images",
+                    template=io.Autogrow.TemplateNames(
+                        io.Image.Input("image"),
+                        names=[f"image_{i}" for i in range(1, 17)],
+                        min=0,
+                    ),
+                    tooltip="Reference images, seen by the text encoder and spliced into the sequence as VAE latents.",
+                ),
+            ],
+            outputs=[
+                io.Conditioning.Output(display_name="positive"),
+                io.Conditioning.Output(display_name="negative"),
+                io.Latent.Output(
+                    display_name="latent",
+                    tooltip="Empty latent on the first reference image's size, to match with sampling as any other size shifts the edit.",
+                ),
+                io.Image.Output(
+                    display_name="image",
+                    tooltip="First reference image (image_1) resized to target resolution.",
+                ),
+            ],
+        )
 
-    RETURN_TYPES = ("CONDITIONING", "CONDITIONING", "LATENT", "IMAGE")
-    RETURN_NAMES = ("positive", "negative", "latent", "images")
-    OUTPUT_IS_LIST = (False, False, False, True)
-    FUNCTION = "encode"
-    CATEGORY = "model/conditioning/qwen image"
-
-    def encode(
-        self,
+    @classmethod
+    def execute(
+        cls,
         clip,
         prompt,
         negative_prompt,
         vae=None,
         resolution=1024,
         round_to_multiple=64,
-        **kwargs,
-    ):
+        images: io.Autogrow.Type = None,
+    ) -> io.NodeOutput:
         ref_latents = []
         images_vl = []
-        resized_images = []
+        first_resized_image = None
 
+        images = images or {}
         round_to_multiple = int(round_to_multiple)
         latent_w = latent_h = resolution or 1024
 
-        # Lấy danh sách các image_1..image_16 từ kwargs và sắp xếp theo thứ tự
-        image_keys = [k for k in kwargs.keys() if k.startswith("image_")]
-        for name in sorted(image_keys, key=lambda n: int(n.rsplit("_", 1)[-1])):
-            image = kwargs[name]
+        for name in sorted(images, key=lambda n: int(n.rsplit("_", 1)[-1])):
+            image = images[name]
             if image is None:
                 continue
 
@@ -121,8 +118,10 @@ class DeainsaneTextEncodeQwenImage21:
                 # Vision tower nhìn ảnh có alpha đè lên nền trắng, trong khi VAE giữ cả 4 kênh
                 rgb = rgb * s[:, :, :, 3:] + (1.0 - s[:, :, :, 3:])
 
+            if first_resized_image is None:
+                first_resized_image = rgb
+
             images_vl.append(rgb)
-            resized_images.append(rgb)
 
             if vae is not None:
                 ref_latents.append(vae.encode(s))
@@ -158,11 +157,13 @@ class DeainsaneTextEncodeQwenImage21:
             device=comfy.model_management.intermediate_device(),
         )
 
-        # Nếu không có ảnh đầu vào nào được nối, trả về 1 ảnh rỗng theo kích thước chuẩn để tránh lỗi
-        if not resized_images:
-            resized_images = [torch.zeros([1, latent_h, latent_w, 3], dtype=torch.float32)]
+        # Nếu không nối ảnh đầu vào nào, tạo ảnh rỗng theo kích thước latent để tránh lỗi ở node sau
+        if first_resized_image is None:
+            first_resized_image = torch.zeros(
+                [1, latent_h, latent_w, 3], dtype=torch.float32
+            )
 
-        return (positive, negative, {"samples": latent}, resized_images)
+        return io.NodeOutput(positive, negative, {"samples": latent}, first_resized_image)
 
 
 NODE_CLASS_MAPPINGS = {
