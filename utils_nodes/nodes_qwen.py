@@ -171,5 +171,5 @@ NODE_CLASS_MAPPINGS = {
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "DeainsaneTextEncodeQwenImage21": "🐺 Text Encode Qwen Image 2.1",
+    "DeainsaneTextEncodeQwenImage21": "Deainsane Text Encode Qwen Image 2.1 🐺",
 }
